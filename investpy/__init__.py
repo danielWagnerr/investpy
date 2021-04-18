@@ -39,4 +39,4 @@ from .search import search_quotes, search_events
 
 from .news import economic_calendar
 
-from .technical import technical_indicators, moving_averages, pivot_points
+from .technical import technical_indicators, technical_analysis, moving_averages, pivot_points
