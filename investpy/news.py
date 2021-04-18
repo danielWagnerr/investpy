@@ -102,7 +102,7 @@ def economic_calendar(time_zone=None, time_filter='time_only', countries=None, i
     if to_date is not None and not isinstance(to_date, str):
         raise ValueError("ERR#0114: the introduced date value must be a string unless it is None.")
 
-    url = "https://www.investing.com/economic-calendar/Service/getCalendarFilteredData"
+    url = "https://br.investing.com/economic-calendar/Service/getCalendarFilteredData"
 
     headers = {
         "User-Agent": random_user_agent(),

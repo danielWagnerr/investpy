@@ -3,7 +3,6 @@
 
 import pandas as pd
 
-import pkg_resources
 from unidecode import unidecode
 
 import requests
@@ -11,6 +10,114 @@ from lxml.html import fromstring
 
 from .utils import constant as cst
 from .utils.extra import random_user_agent, resource_to_data
+
+
+def technical_analysis(name, country, product_type, interval='daily'):
+    """
+    This function retrieves the technical analysis values calculated by Investing.com for every financial product
+    available (stocks, funds, etfs, indices, currency crosses, bonds, certificates and commodities) for different
+    time intervals. So on, the user must provide the product_type name and the name of the product (unless product_type
+    is 'stock' which name value will be the stock's symbol) and the country if required (mandatory unless product_type
+    is either 'currency_cross' or 'commodity', where it must be None). Additionally, the interval can be specified
+    which defines the update frequency of the calculations of the technical indicators (mainly momentum indicators).
+
+    Args:
+        name (:obj:`str`):
+            name of the product to retrieve the technical indicators table from (if product_type is `stock`, its value
+            must be the stock's symbol not the name).
+        country (:obj:`str`):
+            country name of the introduced product if applicable (if product_type is either `currency_cross` or `commodity`
+            this parameter should be None, unless it can be specified just for `commodity` product_type).
+        product_type (:obj:`str`):
+            identifier of the introduced product, available ones are: `stock`, `fund`, `etf`, `index`, `currency_cross`,
+            `bond`, `certificate` and `commodity`.
+        interval (:obj:`str`):
+            time interval of the resulting calculations, available values are: `5mins`, `15mins`, `30mins`, `1hour`,
+            `5hours`, `daily`, `weekly` and `monthly`.
+    """
+
+    if not name:
+        raise ValueError("ERR#0116: the parameter name must be specified and must be a string.")
+
+    if not isinstance(name, str):
+        raise ValueError("ERR#0116: the parameter name must be specified and must be a string.")
+
+    if country is not None and not isinstance(country, str):
+        raise ValueError("ERR#0117: this parameter can just be None or a string, if required.")
+
+    if not product_type:
+        raise ValueError("ERR#0118: product_type value is mandatory and must be a string.")
+
+    if not isinstance(product_type, str):
+        raise ValueError("ERR#0118: product_type value is mandatory and must be a string.")
+
+    if not interval:
+        raise ValueError("ERR#0121: interval value is mandatory and must be a string.")
+
+    if not isinstance(interval, str):
+        raise ValueError("ERR#0121: interval value is mandatory and must be a string.")
+
+    product_type = unidecode(product_type.lower().strip())
+
+    if product_type not in cst.PRODUCT_TYPE_FILES.keys():
+        raise ValueError("ERR#0119: introduced product_type value does not exist. Available values are: " + ', '.join(cst.PRODUCT_TYPE_FILES.keys()))
+
+    if interval:
+        if interval not in cst.INTERVAL_FILTERS.keys():
+            raise ValueError("ERR#0120: introduced interval value does not exist. Available values are: " + ', '.join(cst.INTERVAL_FILTERS.keys()))
+
+    data = resource_to_data(path_to_data=cst.PRODUCT_TYPE_FILES[product_type])
+
+    if product_type not in ['currency_cross']:
+        if country is not None:
+            country = unidecode(country.lower().strip())
+
+            if country not in list(set(data['country'].str.lower())):
+                raise ValueError("ERR#0124: introduced country does not exist or is not available.")
+
+            data = data[data['country'] == country]
+        else:
+            if product_type != 'commodity':
+                raise ValueError("ERR#0123: country parameter is required with the introduced product_type.")
+
+    if product_type == 'stock':
+        check = 'symbol'
+    else:
+        check = 'name'
+
+    name = unidecode(name.lower().strip())
+
+    if name not in list(data[check].apply(unidecode).str.lower()):
+        raise ValueError("ERR#0122: introduced name does not exist in the introduced country (if required).")
+
+    product_id = data.loc[(data[check].apply(unidecode).str.lower() == name).idxmax(), 'id']
+
+    data_values = {
+        'pairID': product_id,
+        'period': cst.INTERVAL_FILTERS[interval],
+        'viewType': 'normal'
+    }
+
+    headers = {
+        "User-Agent": random_user_agent(),
+        "X-Requested-With": "XMLHttpRequest",
+        "Accept": "text/html",
+        "Accept-Encoding": "gzip, deflate",
+        "Connection": "keep-alive",
+    }
+
+    url = "https://www.investing.com/instruments/Service/GetTechincalData"
+
+    req = requests.post(url, headers=headers, data=data_values)
+
+    if req.status_code != 200:
+        raise ConnectionError("ERR#0015: error " + str(req.status_code) + ", try again later.")
+
+    root = fromstring(req.text)
+    summary_root = root.xpath(".//div[@class='summary']")
+    action = summary_root[0].text_content()
+
+    return action
 
 
 def technical_indicators(name, country, product_type, interval='daily'):
@@ -38,17 +145,17 @@ def technical_indicators(name, country, product_type, interval='daily'):
 
     Returns:
         :obj:`pandas.DataFrame` - technical_indicators:
-            The resulting :obj:`pandas.DataFrame` contains the table with the results of the calculation of the technical 
+            The resulting :obj:`pandas.DataFrame` contains the table with the results of the calculation of the technical
             indicators made by Investing.com for the introduced financial product. So on, if the retrieval process succeed
             its result will look like::
 
-                 technical_indicator | value | signal 
+                 technical_indicator | value | signal
                 ---------------------|-------|--------
                  xxxxxxxxxxxxxxxxxxx | xxxxx | xxxxxx
-                
+
     Raises:
         ValueError: raised if any of the introduced parameters is not valid or errored.
-        ConnectionError: raised if the connection to Investing.com errored or could not be established. 
+        ConnectionError: raised if the connection to Investing.com errored or could not be established.
 
     Examples:
         >>> data = investpy.technical_indicators(name='bbva', country='spain', product_type='stock', interval='daily')
@@ -147,6 +254,8 @@ def technical_indicators(name, country, product_type, interval='daily'):
         raise ConnectionError("ERR#0015: error " + str(req.status_code) + ", try again later.")
 
     root = fromstring(req.text)
+    call = root.xpath(".//span[contains(@class, 'buy uppercaseText')]")
+    print(call)
     table = root.xpath(".//table[contains(@class, 'technicalIndicatorsTbl')]/tbody/tr")
 
     tech_indicators = list()
@@ -157,7 +266,7 @@ def technical_indicators(name, country, product_type, interval='daily'):
                 tech_ind = value.text_content().strip()
                 tech_val = float(value.getnext().text_content().strip())
                 tech_sig = value.getnext().getnext().text_content().strip().lower()
-                
+
                 tech_indicators.append({
                     'technical_indicator': tech_ind,
                     'value': tech_val,
