@@ -10,6 +10,7 @@ def readme():
     with io.open('README.md', encoding='utf-8') as f:
         return f.read()
 
+
 def requirements(filename):
     reqs = list()
     with io.open(filename, encoding='utf-8') as f:

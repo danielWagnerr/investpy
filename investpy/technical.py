@@ -106,7 +106,7 @@ def technical_analysis(name, country, product_type, interval='daily'):
         "Connection": "keep-alive",
     }
 
-    url = "https://www.investing.com/instruments/Service/GetTechincalData"
+    url = "https://br.investing.com/instruments/Service/GetTechincalData"
 
     req = requests.post(url, headers=headers, data=data_values)
 
