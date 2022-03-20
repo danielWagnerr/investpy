@@ -7,9 +7,10 @@ import pkg_resources
 import random
 
 from . import constant as cst
+from . import currency_crosses
 
 
-def resource_to_data(path_to_data):
+def resource_to_data(path_to_data, technical_analysis = False):
     """
     This is an auxiliar function to read data from a given path, so as to wrap the load
     process of the static data files from investpy.
@@ -28,7 +29,10 @@ def resource_to_data(path_to_data):
     resource_package = 'investpy'
     resource_path = '/'.join(('resources', path_to_data))
     if pkg_resources.resource_exists(resource_package, resource_path):
-        data = pd.read_csv(pkg_resources.resource_filename(resource_package, resource_path), keep_default_na=False)
+        if technical_analysis:
+            data = pd.read_json(currency_crosses.currency_crosses)
+        else:
+            data = pd.read_csv(pkg_resources.resource_filename(resource_package, resource_path), keep_default_na=False)
     else:
         raise FileNotFoundError("ERR#0115: data file not found or errored.")
 

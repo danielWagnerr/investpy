@@ -66,7 +66,7 @@ def technical_analysis(name, country, product_type, interval='daily'):
         if interval not in cst.INTERVAL_FILTERS.keys():
             raise ValueError("ERR#0120: introduced interval value does not exist. Available values are: " + ', '.join(cst.INTERVAL_FILTERS.keys()))
 
-    data = resource_to_data(path_to_data=cst.PRODUCT_TYPE_FILES[product_type])
+    data = resource_to_data(path_to_data=cst.PRODUCT_TYPE_FILES[product_type], technical_analysis=True)
 
     if product_type not in ['currency_cross']:
         if country is not None:
