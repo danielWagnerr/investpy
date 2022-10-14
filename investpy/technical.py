@@ -27,7 +27,7 @@ def technical_analysis(name, interval):
             `5hours`, `daily`, `weekly` and `monthly`.
 
     Returns:
-        str: A string containing the current analysis calculated by Investing.com
+        :obj:`str` - A string containing the current analysis calculated by Investing.com
 
     Raises:
         ValueError: raised if any of the introduced parameters is not valid or errored.
@@ -37,8 +37,14 @@ def technical_analysis(name, interval):
     if not name or not isinstance(name, str):
         raise ValueError("ERR#0116: the parameter name must be specified and must be a string.")
 
-    if not interval:
+    if not interval or not isinstance(interval, str):
         raise ValueError("ERR#0121: interval value is mandatory and must be a string.")
+
+    if interval not in cst.INTERVAL_FILTERS.keys():
+        raise ValueError(
+            "ERR#0120: introduced interval value does not exist. Available values are: "
+            + ", ".join(cst.INTERVAL_FILTERS.keys())
+        )
 
     currency_data = resource_to_data(path_to_data=cst.PRODUCT_TYPE_FILES["currency_cross"], technical_analysis=True)
     name = unidecode(name.lower().strip())
@@ -65,7 +71,7 @@ def technical_analysis(name, interval):
     )
 
     product_id = currency_data.loc[(currency_data[check].apply(unidecode).str.lower() == name).idxmax(), "id"]
-    data = f"tab=forex&options%5Bperiods%5D%5B%5D={interval * 60}&options%5Breceive_email%5D=false&options%5Bcurrencies%5D%5B%5D={product_id}"
+    data = f"tab=forex&options%5Bperiods%5D%5B%5D={cst.INTERVAL_FILTERS[interval]}&options%5Breceive_email%5D=false&options%5Bcurrencies%5D%5B%5D={product_id}"
 
     response = requests.post(url, headers=headers, data=data)
     if response.status_code != 200:
