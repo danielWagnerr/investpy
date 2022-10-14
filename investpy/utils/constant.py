@@ -404,3 +404,10 @@ INDEX_COUNTRIES = [
     {'country': 'world', 'country_name': 'world'}, {'country': 'zambia', 'country_name': 'zambia'}, {'country': 'zimbabwe', 'country_name': 'zimbabwe'},
     {'country': 'euro zone', 'country_name': 'euro zone'}
 ]
+
+
+TECHNICAL_INDICATORS_CSS_CLASSES = [
+    "redFont bold left arial_14 js-socket-elem",
+    "lightgrayFont bold left arial_14 js-socket-elem",
+    "greenFont bold left arial_14 js-socket-elem",
+]
