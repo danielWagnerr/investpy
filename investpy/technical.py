@@ -53,7 +53,7 @@ def technical_analysis(name, interval):
     if name not in list(currency_data[check].apply(unidecode).str.lower()):
         raise ValueError("ERR#0122: introduced name does not exist in the introduced country (if required).")
 
-    url = "https://www.investing.com/technical/Service/GetSummaryTable"
+    url = "https://br.investing.com/technical/Service/GetSummaryTable"
     headers = CaseInsensitiveDict(
         {
             "authority": "www.investing.com",
