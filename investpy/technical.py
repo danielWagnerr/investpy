@@ -3,6 +3,7 @@
 
 import json
 import pandas as pd
+import cfscrape
 
 from unidecode import unidecode
 
@@ -73,7 +74,8 @@ def technical_analysis(name, interval):
     product_id = currency_data.loc[(currency_data[check].apply(unidecode).str.lower() == name).idxmax(), "id"]
     data = f"tab=forex&options%5Bperiods%5D%5B%5D={cst.INTERVAL_FILTERS[interval]}&options%5Breceive_email%5D=false&options%5Bcurrencies%5D%5B%5D={product_id}"
 
-    response = requests.post(url, headers=headers, data=data)
+    scraper = cfscrape.create_scraper()
+    response = scraper.post(url, headers=headers, data=data)
     if response.status_code != 200:
         raise ConnectionError("ERR#0015: error " + str(response.status_code) + ", try again later.")
 
