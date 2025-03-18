@@ -3,6 +3,7 @@
 
 import pandas as pd
 import pkg_resources
+from io import StringIO
 
 import random
 
@@ -30,7 +31,7 @@ def resource_to_data(path_to_data, technical_analysis = False):
     resource_path = '/'.join(('resources', path_to_data))
     if pkg_resources.resource_exists(resource_package, resource_path):
         if technical_analysis:
-            data = pd.read_json(currency_crosses.currency_crosses)
+            data = pd.read_json(StringIO(currency_crosses.currency_crosses))
         else:
             data = pd.read_csv(pkg_resources.resource_filename(resource_package, resource_path), keep_default_na=False)
     else:
